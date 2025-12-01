@@ -4,11 +4,13 @@ version = "0.1.0"
 description = ""
 authors = ["Sean Muirhead <smmuirhead100@berkeley.edu>"]
 readme = "README.md"
+packages = [{include = "agents"}, {include = "llms"}]
 
 [tool.poetry.dependencies]
 python = "^3.13"
 pydantic = "^2.12.4"
 anthropic = "^0.74.1"
+dotenv = "^0.9.9"
 
 
 [build-system]

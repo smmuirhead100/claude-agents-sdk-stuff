@@ -8,6 +8,7 @@ from agents.tools import ToolCall
 class ChatRole(Enum):
     USER = "USER"
     ASSISTANT = "ASSISTANT"
+    SYSTEM = "SYSTEM"
 
 
 class ChatMessage(BaseModel):
