@@ -4,7 +4,7 @@ from typing import AsyncGenerator, List
 from anthropic import AsyncAnthropic
 
 from agents.chat_context import ChatMessage
-from agents.tools import Tool
+from agents.tools import Tool, ToolCall
 from llms.anthropic.utils import anthropic_chunk_to_str_or_tool_call, chat_messages_to_anthropic_system_and_messages, tool_to_anthropic_tool
 from .models import AnthropicLLMModel
 from llms.llm import LLM as BaseLLM
@@ -22,7 +22,7 @@ class LLM(BaseLLM):
         self,
         messages: list[ChatMessage],
         tools: List[Tool],
-    ) -> AsyncGenerator[str]:
+    ) -> AsyncGenerator[str | ToolCall]:
         system, messages = chat_messages_to_anthropic_system_and_messages(messages)
         stream = await self.client.messages.create(
             max_tokens=1024,
@@ -34,5 +34,6 @@ class LLM(BaseLLM):
         )
         async for chunk in stream:
             converted_chunk = anthropic_chunk_to_str_or_tool_call(chunk)
-            if isinstance(converted_chunk, str):
-                yield str
+            if converted_chunk:
+                yield converted_chunk
+            

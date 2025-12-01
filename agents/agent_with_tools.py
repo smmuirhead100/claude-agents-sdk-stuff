@@ -8,7 +8,7 @@ from llms.llm import LLM
 
 class AgentWithToolsOptions(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    
+
     llm: LLM
     tools: list[Tool]
 
@@ -24,5 +24,14 @@ class AgentWithTools:
         )
         async for chunk in stream:
             if isinstance(chunk, ToolCall):
-                raise NotImplementedError("Tools not handled.")
+                tool_call_response = await self._execute_tool_call(tool_call=chunk)
+                chunk.response = tool_call_response
             yield chunk
+
+    async def _execute_tool_call(self, tool_call: ToolCall) -> str:
+        method_name = tool_call.tool.name
+        method = getattr(self, method_name)
+        if not method:
+            raise ValueError(f"Method '{method_name}' not found on {self.__class__.__name__}")
+        result = await method(**tool_call.args)
+        return str(result)

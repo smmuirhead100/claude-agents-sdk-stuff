@@ -31,7 +31,7 @@ def chat_messages_to_anthropic_system_and_messages(messages: list[ChatMessage]) 
     return system_prompt, anthropic_messages
 
 
-def tool_to_anthropic_tool(tool: Tool) -> list[anthropic_types.ToolParam]:
+def tool_to_anthropic_tool(tool: Tool) -> anthropic_types.ToolParam:
     return anthropic_types.ToolParam(
         name=tool.name,
         description=tool.description,
