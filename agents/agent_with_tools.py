@@ -17,7 +17,7 @@ class AgentWithTools:
     def __init__(self, options: AgentWithToolsOptions) -> None:
         self.options = options
 
-    async def astream(self, messages: list[ChatMessage]) -> AsyncGenerator[str]:
+    async def astream(self, messages: list[ChatMessage]) -> AsyncGenerator[str | ToolCall]:
         stream = self.options.llm.astream(
             messages=messages,
             tools=self.options.tools,
