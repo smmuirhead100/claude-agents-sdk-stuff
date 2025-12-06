@@ -13,7 +13,10 @@ anthropic = "^0.74.1"
 dotenv = "^0.9.9"
 
 [tool.pylint]
-disable = ["line-too-long"]
+max-line-length = 150
+
+[tool.flake8]
+max-line-length = 120
 
 [build-system]
 requires = ["poetry-core"]
