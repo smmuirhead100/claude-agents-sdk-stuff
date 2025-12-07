@@ -3,8 +3,8 @@ from typing import AsyncGenerator, List
 
 from anthropic import AsyncAnthropic
 
-from agents.chat_context import ChatMessage
-from agents.tools import Tool, ToolCall
+from agents.core.chat_context import ChatMessage
+from agents.core.tools import Tool, ToolCall
 from llms.anthropic.utils import anthropic_chunk_to_str_or_tool_call, chat_messages_to_anthropic_system_and_messages, tool_to_anthropic_tool
 from .models import AnthropicLLMModel
 from llms.llm import LLM as BaseLLM

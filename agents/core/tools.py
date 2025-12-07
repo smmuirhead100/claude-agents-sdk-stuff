@@ -14,6 +14,12 @@ class ToolCall(BaseModel):
     args: Dict[str, Any]
     response: str
 
+
+def tool(func):
+    func.is_tool = True
+    return func
+
+
 # class User(BaseModel):
 #     name: str = Field(description="The user's full name")
 #     age: int = Field(ge=0, description="The user's age in years")

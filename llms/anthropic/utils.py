@@ -1,6 +1,6 @@
 from anthropic import types as anthropic_types
-from agents.chat_context import ChatMessage, ChatRole
-from agents.tools import Tool, ToolCall
+from agents.core.chat_context import ChatMessage, ChatRole
+from agents.core.tools import Tool, ToolCall
 
 
 def chat_messages_to_anthropic_system_and_messages(messages: list[ChatMessage]) -> tuple[str, list[ChatMessage]]:

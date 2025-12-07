@@ -2,7 +2,7 @@ from enum import Enum
 
 from pydantic import BaseModel
 
-from agents.tools import ToolCall
+from agents.core.tools import ToolCall
 
 
 class ChatRole(Enum):

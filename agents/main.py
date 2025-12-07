@@ -1,5 +1,5 @@
 import asyncio
-from agents.core.agent_with_tools import AgentWithTools, AgentWithToolsOptions
+from agents.core.agent_with_tools import AgentWithTools
 from agents.core.chat_context import ChatMessage, ChatRole
 from agents.core.tools import ToolCall
 from llms.anthropic.models import AnthropicLLMModel
@@ -8,8 +8,7 @@ from llms.anthropic.llm import LLM
 
 async def run():
     llm = LLM(model=AnthropicLLMModel.CLAUDE_4_5_SONNET.value)
-    options = AgentWithToolsOptions(llm=llm, tools=[])
-    agent = AgentWithTools(options=options)
+    agent = AgentWithTools(llm=llm)
 
     # Initialize messages with system message
     messages: list[ChatMessage] = [ChatMessage(role=ChatRole.SYSTEM, content="Testing")]
