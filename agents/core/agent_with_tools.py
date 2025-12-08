@@ -2,7 +2,7 @@ from typing import AsyncGenerator, List
 import inspect
 
 from pydantic import create_model
-from agents.core.chat_context import ChatMessage
+from agents.core.chat_context import ChatMessage, ChatRole
 from agents.core.tools import Tool, ToolCall
 from llms.llm import LLM
 
@@ -10,21 +10,27 @@ _IS_TOOL = "is_tool"
 
 
 class AgentWithTools:
-    def __init__(self, llm: LLM) -> None:
+    def __init__(self, llm: LLM, instructions: str,) -> None:
         self._llm = llm
+        self._messages: List[ChatMessage] = [ChatMessage(role=ChatRole.SYSTEM, content=instructions)]
         self._tools = self._get_tools_from_decorated_methods()
-        print([t.model_dump() for t in self._tools])
 
-    async def astream(self, messages: List[ChatMessage]) -> AsyncGenerator[str | ToolCall]:
-        stream = self._llm.astream(
-            messages=messages,
-            tools=self._tools,
-        )
+    async def astream(self, chat_message: ChatMessage) -> AsyncGenerator[str | ToolCall]:
+        self._messages.append(chat_message)
+        stream = self._llm.astream(messages=self._messages, tools=self._tools)
+        res = ""
         async for chunk in stream:
             if isinstance(chunk, ToolCall):
                 tool_call_response = await self._execute_tool_call(tool_call=chunk)
                 chunk.response = tool_call_response
-            yield chunk
+                tool_call_message = ChatMessage(role=ChatRole.ASSISTANT, content=chunk)
+                async for chunk_after_tool_call in self.astream(tool_call_message):
+                    yield chunk_after_tool_call
+            else:
+                res += chunk
+                yield chunk
+        if res:
+            self._messages.append(ChatMessage(role=ChatRole.ASSISTANT, content=res))
 
     async def _execute_tool_call(self, tool_call: ToolCall) -> str:
         method_name = tool_call.name

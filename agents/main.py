@@ -9,10 +9,8 @@ from llms.anthropic.llm import LLM
 
 async def run():
     llm = LLM(model=AnthropicLLMModel.CLAUDE_4_5_SONNET.value)
-    agent = AgentWithBash(llm=llm)
-
-    # Initialize messages with system message
-    messages: list[ChatMessage] = [ChatMessage(role=ChatRole.SYSTEM, content="You are a testing agent being tested by the developer right now.")]
+    instructions = "You are a testing agent being tested by the developer right now."
+    agent = AgentWithBash(llm=llm, instructions=instructions)
 
     print("Chat with the agent! Type 'exit' or 'quit' to end the conversation.\n")
 
@@ -23,24 +21,19 @@ async def run():
             break
 
         # Add user message to history
-        messages.append(ChatMessage(role=ChatRole.USER, content=user_input))
+        message = ChatMessage(role=ChatRole.USER, content=user_input)
 
         # Stream agent response
         print("Agent: ", end="", flush=True)
         assistant_content_parts: list[str] = []
         tool_calls: list[ToolCall] = []
-        async for chunk in agent.astream(messages=messages):
+        async for chunk in agent.astream(chat_message=message):
             if isinstance(chunk, ToolCall):
                 tool_calls.append(chunk)
             else:
                 print(chunk, end="", flush=True)
                 assistant_content_parts.append(chunk)
         print()
-
-        # Add assistant response to history
-        assistant_content = "".join(assistant_content_parts)
-        assistant_message = ChatMessage(role=ChatRole.ASSISTANT, content=assistant_content)
-        messages.append(assistant_message)
 
 
 if __name__ == "__main__":
