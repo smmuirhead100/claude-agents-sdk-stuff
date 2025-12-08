@@ -1,6 +1,7 @@
 import asyncio
+import os
+import shutil
 from agents.builtins.agent_with_bash import AgentWithBash
-from agents.core.agent_with_tools import AgentWithTools
 from agents.core.chat_context import ChatMessage, ChatRole
 from agents.core.tools import ToolCall
 from llms.anthropic.models import AnthropicLLMModel
@@ -14,26 +15,29 @@ async def run():
 
     print("Chat with the agent! Type 'exit' or 'quit' to end the conversation.\n")
 
-    while True:
-        user_input = input("You: ").strip()
-        if user_input.lower() in ("exit", "quit"):
-            print("Goodbye!")
-            break
+    try:
+        while True:
+            user_input = input("You: ").strip()
+            if user_input.lower() in ("exit", "quit"):
+                print("Goodbye!")
+                break
 
-        # Add user message to history
-        message = ChatMessage(role=ChatRole.USER, content=user_input)
+            message = ChatMessage(role=ChatRole.USER, content=user_input)
 
-        # Stream agent response
-        print("Agent: ", end="", flush=True)
-        assistant_content_parts: list[str] = []
-        tool_calls: list[ToolCall] = []
-        async for chunk in agent.astream(chat_message=message):
-            if isinstance(chunk, ToolCall):
-                tool_calls.append(chunk)
-            else:
-                print(chunk, end="", flush=True)
-                assistant_content_parts.append(chunk)
-        print()
+            print("Agent: ", end="", flush=True)
+            assistant_content_parts: list[str] = []
+            tool_calls: list[ToolCall] = []
+            async for chunk in agent.astream(chat_message=message):
+                if isinstance(chunk, ToolCall):
+                    tool_calls.append(chunk)
+                else:
+                    print(chunk, end="", flush=True)
+                    assistant_content_parts.append(chunk)
+            print()
+    finally:
+        # Clean up the workspace
+        if hasattr(agent, 'work_dir') and os.path.exists(agent.work_dir):
+            shutil.rmtree(agent.work_dir)
 
 
 if __name__ == "__main__":
