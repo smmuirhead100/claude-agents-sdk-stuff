@@ -37,11 +37,3 @@ def tool_to_anthropic_tool(tool: Tool) -> anthropic_types.ToolParam:
         description=tool.description,
         input_schema=tool.input_schema.model_json_schema(),
     )
-
-
-def anthropic_chunk_to_str_or_tool_call(chunk: anthropic_types.RawMessageStreamEvent) -> str | ToolCall | None:
-    if isinstance(chunk, anthropic_types.RawContentBlockDeltaEvent):
-        return chunk.delta.text
-    elif isinstance(chunk, anthropic_types.InputJSONDelta):
-        return chunk.partial_json
-    return None

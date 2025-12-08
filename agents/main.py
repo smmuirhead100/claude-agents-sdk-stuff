@@ -1,4 +1,5 @@
 import asyncio
+from agents.builtins.agent_with_bash import AgentWithBash
 from agents.core.agent_with_tools import AgentWithTools
 from agents.core.chat_context import ChatMessage, ChatRole
 from agents.core.tools import ToolCall
@@ -8,10 +9,10 @@ from llms.anthropic.llm import LLM
 
 async def run():
     llm = LLM(model=AnthropicLLMModel.CLAUDE_4_5_SONNET.value)
-    agent = AgentWithTools(llm=llm)
+    agent = AgentWithBash(llm=llm)
 
     # Initialize messages with system message
-    messages: list[ChatMessage] = [ChatMessage(role=ChatRole.SYSTEM, content="Testing")]
+    messages: list[ChatMessage] = [ChatMessage(role=ChatRole.SYSTEM, content="You are a testing agent being tested by the developer right now.")]
 
     print("Chat with the agent! Type 'exit' or 'quit' to end the conversation.\n")
 

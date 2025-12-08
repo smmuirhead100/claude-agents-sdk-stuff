@@ -13,6 +13,7 @@ class AgentWithTools:
     def __init__(self, llm: LLM) -> None:
         self._llm = llm
         self._tools = self._get_tools_from_decorated_methods()
+        print([t.model_dump() for t in self._tools])
 
     async def astream(self, messages: List[ChatMessage]) -> AsyncGenerator[str | ToolCall]:
         stream = self._llm.astream(
@@ -26,7 +27,7 @@ class AgentWithTools:
             yield chunk
 
     async def _execute_tool_call(self, tool_call: ToolCall) -> str:
-        method_name = tool_call.tool.name
+        method_name = tool_call.name
         method = getattr(self, method_name)
         if not method:
             raise ValueError(f"Method '{method_name}' not found on {self.__class__.__name__}")

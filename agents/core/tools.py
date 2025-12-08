@@ -1,4 +1,4 @@
-from typing import Any, Dict, Type
+from typing import Any, Dict, Optional, Type
 from pydantic import BaseModel
 
 
@@ -10,9 +10,9 @@ class Tool(BaseModel):
 
 class ToolCall(BaseModel):
     id: str
-    tool: Tool
-    args: Dict[str, Any]
-    response: str
+    name: str
+    args: Optional[Dict[str, Any]] = None
+    response: Optional[str] = None
 
 
 def tool(func):
