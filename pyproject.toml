@@ -1,25 +1,37 @@
-[tool.poetry]
+[project]
 name = "vibedb"
 version = "0.1.0"
 description = ""
-authors = ["Sean Muirhead <smmuirhead100@berkeley.edu>"]
+authors = [{ name = "Sean Muirhead", email = "smmuirhead100@berkeley.edu" }]
+requires-python = ">=3.13,<4"
 readme = "README.md"
-packages = [{include = "agents"}, {include = "llms"}]
-
-[tool.poetry.dependencies]
-python = "^3.13"
-pydantic = "^2.12.4"
-anthropic = "^0.74.1"
-dotenv = "^0.9.9"
-sqlalchemy = "^2.0.0"
-psycopg2-binary = "^2.9.0"
+dependencies = [
+    "pydantic>=2.12.4,<3",
+    "anthropic>=0.74.1,<0.75",
+    "dotenv>=0.9.9,<0.10",
+    "sqlalchemy>=2.0.0,<3",
+    "psycopg2-binary>=2.9.0,<3",
+    "google-genai>=1.56.0,<2",
+]
 
 [tool.pylint]
 max-line-length = 150
 
-[tool.flake8]
-max-line-length = 120
+[tool.hatch.build.targets.sdist]
+include = [
+    "agents",
+    "llms",
+]
+
+[tool.hatch.build.targets.wheel]
+include = [
+    "agents",
+    "llms",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.flake8]
+max-line-length = 120
