@@ -30,13 +30,20 @@ class AgentWithTools:
                 response += chunk
                 yield chunk
 
-        # If we have tool calls, execute them all in parallel
+        # Add assistant's response to message history
         if tool_calls:
+            # Execute all tool calls in parallel
             tc_responses = await asyncio.gather(*[self._execute_tool_call(tool_call=tc) for tc in tool_calls])
             for tool_call, tc_response in zip(tool_calls, tc_responses):
                 tool_call.response = tc_response
-                self._messages.append(ChatMessage(role=ChatRole.ASSISTANT, content=response))
-        if response:
+
+            # Add assistant message with tool calls (single or multiple)
+            if len(tool_calls) == 1:
+                self._messages.append(ChatMessage(role=ChatRole.ASSISTANT, content=tool_calls[0]))
+            else:
+                self._messages.append(ChatMessage(role=ChatRole.ASSISTANT, content=tool_calls))
+        elif response:
+            # Add assistant message with text response
             self._messages.append(ChatMessage(role=ChatRole.ASSISTANT, content=response))
 
     async def _execute_tool_call(self, tool_call: ToolCall) -> str:
