@@ -13,6 +13,7 @@ class ToolCall(BaseModel):
     name: str
     args: Optional[Dict[str, Any]] = None
     response: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
 
 
 def tool(func):
