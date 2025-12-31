@@ -1,6 +1,7 @@
 from enum import Enum
 
 from pydantic import BaseModel
+from typing import List
 
 from agents.core.tools import ToolCall
 
@@ -13,4 +14,4 @@ class ChatRole(Enum):
 
 class ChatMessage(BaseModel):
     role: ChatRole
-    content: str | ToolCall
+    content: str | ToolCall | List[ToolCall]

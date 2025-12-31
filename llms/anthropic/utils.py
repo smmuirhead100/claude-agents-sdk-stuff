@@ -14,6 +14,7 @@ def chat_messages_to_anthropic_system_and_messages(messages: list[ChatMessage]) 
         if isinstance(msg.content, str):
             anthropic_messages.append(anthropic_types.MessageParam(role=role, content=msg.content))
         elif isinstance(msg.content, ToolCall):
+            # Single tool call
             tool_call = msg.content
             tool_use_block = anthropic_types.ToolUseBlockParam(
                 id=tool_call.id,
@@ -37,8 +38,35 @@ def chat_messages_to_anthropic_system_and_messages(messages: list[ChatMessage]) 
                 role="user",
                 content=[tool_result_block]
             ))
+        elif isinstance(msg.content, list) and all(isinstance(tc, ToolCall) for tc in msg.content):
+            # Multiple tool calls
+            tool_use_blocks = []
+            tool_result_blocks = []
+            for tool_call in msg.content:
+                tool_use_blocks.append(anthropic_types.ToolUseBlockParam(
+                    id=tool_call.id,
+                    input=tool_call.args or {},
+                    name=tool_call.name,
+                    type="tool_use",
+                ))
+                tool_result_blocks.append(anthropic_types.ToolResultBlockParam(
+                    tool_use_id=tool_call.id,
+                    content=tool_call.response or "",
+                    is_error=False,
+                    type="tool_result",
+                ))
+            # Assistant message with all tool uses
+            anthropic_messages.append(anthropic_types.MessageParam(
+                role="assistant",
+                content=tool_use_blocks
+            ))
+            # User message with all tool results
+            anthropic_messages.append(anthropic_types.MessageParam(
+                role="user",
+                content=tool_result_blocks
+            ))
         else:
-            raise ValueError(f"Unknown message type: {msg}")
+            raise ValueError(f"Unknown message type: {type(msg.content)}")
 
     return system_prompt, anthropic_messages
 

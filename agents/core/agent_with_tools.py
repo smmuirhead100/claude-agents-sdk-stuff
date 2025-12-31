@@ -1,4 +1,5 @@
 from typing import AsyncGenerator, List
+import asyncio
 import inspect
 
 from pydantic import create_model
@@ -17,27 +18,35 @@ class AgentWithTools:
 
     async def astream(self, chat_message: ChatMessage) -> AsyncGenerator[str | ToolCall]:
         self._messages.append(chat_message)
+        response = ""
+        tool_calls: List[ToolCall] = []
+
         stream = self._llm.astream(messages=self._messages, tools=self._tools)
-        res = ""
         async for chunk in stream:
             if isinstance(chunk, ToolCall):
-                tool_call_response = await self._execute_tool_call(tool_call=chunk)
-                chunk.response = tool_call_response
-                tool_call_message = ChatMessage(role=ChatRole.ASSISTANT, content=chunk)
-                async for chunk_after_tool_call in self.astream(tool_call_message):
-                    yield chunk_after_tool_call
-            else:
-                res += chunk
+                tool_calls.append(chunk)
                 yield chunk
-        if res:
-            self._messages.append(ChatMessage(role=ChatRole.ASSISTANT, content=res))
+            else:
+                response += chunk
+                yield chunk
+
+        # If we have tool calls, execute them all in parallel
+        if tool_calls:
+            tc_responses = await asyncio.gather(*[self._execute_tool_call(tool_call=tc) for tc in tool_calls])
+            for tool_call, tc_response in zip(tool_calls, tc_responses):
+                tool_call.response = tc_response
+                self._messages.append(ChatMessage(role=ChatRole.ASSISTANT, content=response))
+        if response:
+            self._messages.append(ChatMessage(role=ChatRole.ASSISTANT, content=response))
 
     async def _execute_tool_call(self, tool_call: ToolCall) -> str:
         method_name = tool_call.name
         method = getattr(self, method_name)
         if not method:
             raise ValueError(f"Method '{method_name}' not found on {self.__class__.__name__}")
-        result = await method(**tool_call.args)
+        # Ensure args is not None
+        args = tool_call.args if tool_call.args is not None else {}
+        result = await method(**args)
         return str(result)
 
     def _get_tools_from_decorated_methods(self) -> List[Tool]:
