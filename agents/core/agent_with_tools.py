@@ -25,33 +25,29 @@ class AgentWithTools:
         async for chunk in stream:
             if isinstance(chunk, ToolCall):
                 tool_calls.append(chunk)
-                yield chunk
             else:
                 response += chunk
                 yield chunk
 
-        # Add assistant's response to message history
+        if response:
+            self._messages.append(ChatMessage(role=ChatRole.ASSISTANT, content=response))
+
         if tool_calls:
             # Execute all tool calls in parallel
             tc_responses = await asyncio.gather(*[self._execute_tool_call(tool_call=tc) for tc in tool_calls])
             for tool_call, tc_response in zip(tool_calls, tc_responses):
                 tool_call.response = tc_response
-
-            # Add assistant message with tool calls (single or multiple)
-            if len(tool_calls) == 1:
-                self._messages.append(ChatMessage(role=ChatRole.ASSISTANT, content=tool_calls[0]))
-            else:
-                self._messages.append(ChatMessage(role=ChatRole.ASSISTANT, content=tool_calls))
-        elif response:
-            # Add assistant message with text response
-            self._messages.append(ChatMessage(role=ChatRole.ASSISTANT, content=response))
+                yield tool_call
+            tool_calls_message = ChatMessage(role=ChatRole.ASSISTANT, content=tool_calls)
+            async for chunk_after_tool_calls in self.astream(tool_calls_message):
+                yield chunk_after_tool_calls
 
     async def _execute_tool_call(self, tool_call: ToolCall) -> str:
         method_name = tool_call.name
         method = getattr(self, method_name)
         if not method:
             raise ValueError(f"Method '{method_name}' not found on {self.__class__.__name__}")
-        # Ensure args is not None
+
         args = tool_call.args if tool_call.args is not None else {}
         result = await method(**args)
         return str(result)
